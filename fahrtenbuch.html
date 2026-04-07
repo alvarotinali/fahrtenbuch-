@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fahrtenbuch</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #f5f4f0; --surface: #ffffff; --surface2: #f0ede8;
+    --border: rgba(0,0,0,0.12); --border2: rgba(0,0,0,0.22);
+    --text: #1a1a18; --text2: #5f5e5a; --text3: #888780;
+    --accent: #185fa5;
+    --privat: #0f6e56; --privat-bg: #e1f5ee;
+    --arbeit: #185fa5; --arbeit-bg: #e6f1fb;
+    --wohnarbeit: #854f0b; --wohnarbeit-bg: #faeeda;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1e1d1b; --surface: #2a2926; --surface2: #333230;
+      --border: rgba(255,255,255,0.10); --border2: rgba(255,255,255,0.20);
+      --text: #eeece6; --text2: #b4b2a9; --text3: #888780;
+      --accent: #85b7eb;
+      --privat: #5dcaa5; --privat-bg: #04342c;
+      --arbeit: #85b7eb; --arbeit-bg: #042c53;
+      --wohnarbeit: #ef9f27; --wohnarbeit-bg: #412402;
+    }
+  }
+  body { font-family: -apple-system, 'Helvetica Neue', Arial, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding-bottom: 3rem; }
+  header { background: var(--surface); border-bottom: 0.5px solid var(--border); padding: 1.2rem 1.5rem; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 10; }
+  header h1 { font-size: 18px; font-weight: 600; }
+  header .sub { font-size: 12px; color: var(--text3); margin-top: 2px; }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 1rem 1.5rem; background: var(--surface); border-bottom: 0.5px solid var(--border); }
+  .stat { text-align: center; padding: 0.6rem 0.5rem; background: var(--surface2); border-radius: 8px; }
+  .stat-val { font-size: 20px; font-weight: 600; }
+  .stat-lbl { font-size: 11px; color: var(--text3); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .card { margin: 1.25rem 1.5rem; background: var(--surface); border: 0.5px solid var(--border); border-radius: 10px; padding: 1.25rem; }
+  .card h2 { font-size: 12px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.7px; margin-bottom: 1rem; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .fg { display: flex; flex-direction: column; gap: 4px; }
+  .fg.full { grid-column: 1/-1; }
+  label { font-size: 12px; color: var(--text2); font-weight: 500; }
+  input[type="date"], input[type="number"], select {
+    background: var(--surface2); border: 0.5px solid var(--border2); border-radius: 7px;
+    padding: 9px 12px; font-size: 15px; color: var(--text); width: 100%;
+    outline: none; -webkit-appearance: none; appearance: none; transition: border-color 0.15s;
+  }
+  input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(24,95,165,0.15); }
+  .preview { background: var(--surface2); border: 0.5px dashed var(--border2); border-radius: 7px; padding: 9px 12px; font-size: 15px; color: var(--text3); min-height: 40px; display: flex; align-items: center; }
+  .preview.ok { color: var(--privat); font-weight: 600; }
+  .btn-add { width: 100%; margin-top: 12px; padding: 11px; background: var(--accent); color: #fff; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; }
+  .btn-add:hover { opacity: 0.88; }
+  .btn-add:active { transform: scale(0.98); }
+  .sec { margin: 0 1.5rem; }
+  .sec-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; }
+  .sec-hd h2 { font-size: 12px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.7px; }
+  .btn-del-all { font-size: 12px; color: #e24b4a; background: none; border: 0.5px solid #e24b4a; border-radius: 6px; padding: 4px 10px; cursor: pointer; opacity: 0.7; }
+  .btn-del-all:hover { opacity: 1; }
+  .tbl-wrap { background: var(--surface); border: 0.5px solid var(--border); border-radius: 10px; overflow: hidden; overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 480px; }
+  thead { background: var(--surface2); }
+  th { text-align: left; padding: 9px 12px; font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 0.5px solid var(--border); white-space: nowrap; }
+  td { padding: 10px 12px; border-bottom: 0.5px solid var(--border); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--surface2); }
+  .badge { display: inline-block; font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 20px; white-space: nowrap; }
+  .bp { background: var(--privat-bg); color: var(--privat); }
+  .ba { background: var(--arbeit-bg); color: var(--arbeit); }
+  .bw { background: var(--wohnarbeit-bg); color: var(--wohnarbeit); }
+  .km-val { font-weight: 600; }
+  .xbtn { background: none; border: none; color: var(--text3); cursor: pointer; font-size: 15px; padding: 2px 6px; border-radius: 4px; }
+  .xbtn:hover { color: #e24b4a; background: #fcebeb22; }
+  .empty { padding: 2.5rem; text-align: center; color: var(--text3); font-size: 14px; }
+  @media (max-width: 480px) {
+    .stats, .card { padding-left: 1rem; padding-right: 1rem; }
+    .card, .sec { margin-left: 1rem; margin-right: 1rem; }
+    .grid { grid-template-columns: 1fr; }
+    .fg.full { grid-column: 1; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>&#x1F697; Fahrtenbuch</h1>
+    <div class="sub" id="hdate"></div>
+  </div>
+</header>
+
+<div class="stats">
+  <div class="stat"><div class="stat-val" id="s-n">0</div><div class="stat-lbl">Fahrten</div></div>
+  <div class="stat"><div class="stat-val" id="s-km">0</div><div class="stat-lbl">Gesamt km</div></div>
+  <div class="stat"><div class="stat-val" id="s-mo">0</div><div class="stat-lbl">km diesen Monat</div></div>
+</div>
+
+<div class="card">
+  <h2>Neue Fahrt eintragen</h2>
+  <div class="grid">
+    <div class="fg full"><label for="d">Datum</label><input type="date" id="d"></div>
+    <div class="fg full">
+      <label for="a">Fahrtart</label>
+      <select id="a">
+        <option value="">&#x2014; bitte wählen &#x2014;</option>
+        <option value="privat">Privat</option>
+        <option value="arbeit">Arbeit</option>
+        <option value="wohnarbeit">Wohn-Arbeit</option>
+      </select>
+    </div>
+    <div class="fg"><label for="s">Anfang km</label><input type="number" id="s" placeholder="z.B. 12340" min="0"></div>
+    <div class="fg"><label for="e">Ende km</label><input type="number" id="e" placeholder="z.B. 12395" min="0"></div>
+    <div class="fg full"><label>Gefahrene km</label><div class="preview" id="prev">wird berechnet ...</div></div>
+  </div>
+  <button class="btn-add" onclick="add()">+ Fahrt hinzufügen</button>
+</div>
+
+<div class="sec">
+  <div class="sec-hd">
+    <h2>Alle Einträge</h2>
+    <button class="btn-del-all" onclick="clearAll()">Alle löschen</button>
+  </div>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Datum</th><th>Fahrtart</th><th>Anfang km</th><th>Ende km</th><th>Gefahren</th><th></th></tr></thead>
+      <tbody id="tb"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+const KEY = 'fbn_v1';
+const load = () => { try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch { return []; } };
+const save = d => localStorage.setItem(KEY, JSON.stringify(d));
+const fd = iso => { if (!iso) return ''; const [y,m,d] = iso.split('-'); return d+'.'+m+'.'+y; };
+const fmt = n => n.toLocaleString('de-DE');
+
+function render() {
+  const data = load();
+  const tb = document.getElementById('tb');
+  if (!data.length) {
+    tb.innerHTML = '<tr><td colspan="6"><div class="empty">Noch keine Fahrten eingetragen.</div></td></tr>';
+  } else {
+    tb.innerHTML = data.slice().reverse().map((e,ri) => {
+      const i = data.length - 1 - ri;
+      const bc = e.art === 'privat' ? 'bp' : e.art === 'arbeit' ? 'ba' : 'bw';
+      const bl = e.art === 'privat' ? 'Privat' : e.art === 'arbeit' ? 'Arbeit' : 'Wohn-Arbeit';
+      return `<tr>
+        <td>${fd(e.datum)}</td>
+        <td><span class="badge ${bc}">${bl}</span></td>
+        <td>${fmt(e.start)} km</td>
+        <td>${fmt(e.end)} km</td>
+        <td class="km-val">${fmt(e.km)} km</td>
+        <td><button class="xbtn" onclick="del(${i})" title="Löschen">&#x2715;</button></td>
+      </tr>`;
+    }).join('');
+  }
+  const now = new Date();
+  const totalKm = data.reduce((s,e) => s+e.km, 0);
+  const moKm = data.filter(e => { const d=new Date(e.datum); return d.getFullYear()===now.getFullYear()&&d.getMonth()===now.getMonth(); }).reduce((s,e)=>s+e.km,0);
+  document.getElementById('s-n').textContent = data.length;
+  document.getElementById('s-km').textContent = fmt(totalKm);
+  document.getElementById('s-mo').textContent = fmt(moKm);
+}
+
+function add() {
+  const datum = document.getElementById('d').value;
+  const art = document.getElementById('a').value;
+  const start = parseInt(document.getElementById('s').value);
+  const end = parseInt(document.getElementById('e').value);
+  if (!datum) { alert('Bitte Datum auswählen.'); return; }
+  if (!art) { alert('Bitte Fahrtart auswählen.'); return; }
+  if (isNaN(start)||start<0) { alert('Bitte gültigen Anfangs-km eingeben.'); return; }
+  if (isNaN(end)||end<0) { alert('Bitte gültigen Ende-km eingeben.'); return; }
+  if (end<=start) { alert('Ende-km muss größer als Anfangs-km sein.'); return; }
+  const data = load();
+  data.push({ datum, art, start, end, km: end-start });
+  data.sort((a,b) => a.datum.localeCompare(b.datum));
+  save(data);
+  document.getElementById('s').value = '';
+  document.getElementById('e').value = '';
+  document.getElementById('a').value = '';
+  const p = document.getElementById('prev');
+  p.textContent = 'wird berechnet ...';
+  p.classList.remove('ok');
+  render();
+}
+
+function del(i) {
+  if (!confirm('Eintrag löschen?')) return;
+  const data = load(); data.splice(i,1); save(data); render();
+}
+
+function clearAll() {
+  if (!confirm('Wirklich ALLE Einträge löschen?')) return;
+  save([]); render();
+}
+
+function upd() {
+  const s = parseInt(document.getElementById('s').value);
+  const e = parseInt(document.getElementById('e').value);
+  const p = document.getElementById('prev');
+  if (!isNaN(s)&&!isNaN(e)&&e>s) { p.textContent = fmt(e-s)+' km'; p.classList.add('ok'); }
+  else { p.textContent = 'wird berechnet ...'; p.classList.remove('ok'); }
+}
+
+document.getElementById('s').addEventListener('input', upd);
+document.getElementById('e').addEventListener('input', upd);
+document.getElementById('d').value = new Date().toISOString().split('T')[0];
+
+const mo = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+const n = new Date();
+document.getElementById('hdate').textContent = n.getDate()+'. '+mo[n.getMonth()]+' '+n.getFullYear();
+
+render();
+</script>
+</body>
+</html>
