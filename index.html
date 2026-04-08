@@ -2,214 +2,206 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Fahrtenbuch">
 <title>Fahrtenbuch</title>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  :root {
-    --bg: #f5f4f0; --surface: #ffffff; --surface2: #f0ede8;
-    --border: rgba(0,0,0,0.12); --border2: rgba(0,0,0,0.22);
-    --text: #1a1a18; --text2: #5f5e5a; --text3: #888780;
-    --accent: #185fa5;
-    --privat: #0f6e56; --privat-bg: #e1f5ee;
-    --arbeit: #185fa5; --arbeit-bg: #e6f1fb;
-    --wohnarbeit: #854f0b; --wohnarbeit-bg: #faeeda;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #1e1d1b; --surface: #2a2926; --surface2: #333230;
-      --border: rgba(255,255,255,0.10); --border2: rgba(255,255,255,0.20);
-      --text: #eeece6; --text2: #b4b2a9; --text3: #888780;
-      --accent: #85b7eb;
-      --privat: #5dcaa5; --privat-bg: #04342c;
-      --arbeit: #85b7eb; --arbeit-bg: #042c53;
-      --wohnarbeit: #ef9f27; --wohnarbeit-bg: #412402;
-    }
-  }
-  body { font-family: -apple-system, 'Helvetica Neue', Arial, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding-bottom: 3rem; }
-  header { background: var(--surface); border-bottom: 0.5px solid var(--border); padding: 1.2rem 1.5rem; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 10; }
-  header h1 { font-size: 18px; font-weight: 600; }
-  header .sub { font-size: 12px; color: var(--text3); margin-top: 2px; }
-  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 1rem 1.5rem; background: var(--surface); border-bottom: 0.5px solid var(--border); }
-  .stat { text-align: center; padding: 0.6rem 0.5rem; background: var(--surface2); border-radius: 8px; }
-  .stat-val { font-size: 20px; font-weight: 600; }
-  .stat-lbl { font-size: 11px; color: var(--text3); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.5px; }
-  .card { margin: 1.25rem 1.5rem; background: var(--surface); border: 0.5px solid var(--border); border-radius: 10px; padding: 1.25rem; }
-  .card h2 { font-size: 12px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.7px; margin-bottom: 1rem; }
-  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .fg { display: flex; flex-direction: column; gap: 4px; }
-  .fg.full { grid-column: 1/-1; }
-  label { font-size: 12px; color: var(--text2); font-weight: 500; }
-  input[type="date"], input[type="number"], select {
-    background: var(--surface2); border: 0.5px solid var(--border2); border-radius: 7px;
-    padding: 9px 12px; font-size: 15px; color: var(--text); width: 100%;
-    outline: none; -webkit-appearance: none; appearance: none; transition: border-color 0.15s;
-  }
-  input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(24,95,165,0.15); }
-  .preview { background: var(--surface2); border: 0.5px dashed var(--border2); border-radius: 7px; padding: 9px 12px; font-size: 15px; color: var(--text3); min-height: 40px; display: flex; align-items: center; }
-  .preview.ok { color: var(--privat); font-weight: 600; }
-  .btn-add { width: 100%; margin-top: 12px; padding: 11px; background: var(--accent); color: #fff; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; }
-  .btn-add:hover { opacity: 0.88; }
-  .btn-add:active { transform: scale(0.98); }
-  .sec { margin: 0 1.5rem; }
-  .sec-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; }
-  .sec-hd h2 { font-size: 12px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.7px; }
-  .btn-del-all { font-size: 12px; color: #e24b4a; background: none; border: 0.5px solid #e24b4a; border-radius: 6px; padding: 4px 10px; cursor: pointer; opacity: 0.7; }
-  .btn-del-all:hover { opacity: 1; }
-  .tbl-wrap { background: var(--surface); border: 0.5px solid var(--border); border-radius: 10px; overflow: hidden; overflow-x: auto; }
-  table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 480px; }
-  thead { background: var(--surface2); }
-  th { text-align: left; padding: 9px 12px; font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 0.5px solid var(--border); white-space: nowrap; }
-  td { padding: 10px 12px; border-bottom: 0.5px solid var(--border); vertical-align: middle; }
-  tr:last-child td { border-bottom: none; }
-  tr:hover td { background: var(--surface2); }
-  .badge { display: inline-block; font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 20px; white-space: nowrap; }
-  .bp { background: var(--privat-bg); color: var(--privat); }
-  .ba { background: var(--arbeit-bg); color: var(--arbeit); }
-  .bw { background: var(--wohnarbeit-bg); color: var(--wohnarbeit); }
-  .km-val { font-weight: 600; }
-  .xbtn { background: none; border: none; color: var(--text3); cursor: pointer; font-size: 15px; padding: 2px 6px; border-radius: 4px; }
-  .xbtn:hover { color: #e24b4a; background: #fcebeb22; }
-  .empty { padding: 2.5rem; text-align: center; color: var(--text3); font-size: 14px; }
-  @media (max-width: 480px) {
-    .stats, .card { padding-left: 1rem; padding-right: 1rem; }
-    .card, .sec { margin-left: 1rem; margin-right: 1rem; }
-    .grid { grid-template-columns: 1fr; }
-    .fg.full { grid-column: 1; }
-  }
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{--bg:#f2f1ed;--surface:#fff;--surface2:#f0ede8;--border:rgba(0,0,0,.10);--border2:rgba(0,0,0,.18);--text:#1a1a18;--text2:#5f5e5a;--text3:#99988f;--accent:#185fa5;--green:#0f6e56;--green-bg:#e1f5ee;--blue:#185fa5;--blue-bg:#e6f1fb;--amber:#7a4a08;--amber-bg:#faeeda}
+@media(prefers-color-scheme:dark){:root{--bg:#1c1b19;--surface:#272521;--surface2:#322f2b;--border:rgba(255,255,255,.09);--border2:rgba(255,255,255,.18);--text:#edeae4;--text2:#b0ada6;--text3:#7a7870;--green:#5dcaa5;--green-bg:#04342c;--blue:#85b7eb;--blue-bg:#042c53;--amber:#ef9f27;--amber-bg:#412402}}
+body{font-family:-apple-system,'Helvetica Neue',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:40px}
+.header{background:var(--surface);border-bottom:.5px solid var(--border);padding:16px 18px 14px}
+.header h1{font-size:22px;font-weight:700;letter-spacing:-.4px}
+.header p{font-size:13px;color:var(--text3);margin-top:2px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:14px 16px;background:var(--surface);border-bottom:.5px solid var(--border)}
+.stat{background:var(--surface2);border-radius:10px;padding:10px 8px;text-align:center}
+.stat-val{font-size:19px;font-weight:700}
+.stat-lbl{font-size:10px;color:var(--text3);margin-top:2px;text-transform:uppercase;letter-spacing:.4px}
+.card{margin:14px;background:var(--surface);border:.5px solid var(--border);border-radius:14px;overflow:hidden}
+.card-title{padding:12px 16px 0;font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.6px}
+.card-body{padding:12px 16px 16px}
+.fg{margin-bottom:10px}
+.fg label{display:block;font-size:12px;color:var(--text2);margin-bottom:4px;font-weight:500}
+input[type="date"],input[type="number"],select{width:100%;background:var(--surface2);border:.5px solid var(--border2);border-radius:9px;padding:10px 12px;font-size:16px;color:var(--text);outline:none;-webkit-appearance:none;appearance:none;font-family:inherit}
+input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(24,95,165,.12)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.preview{width:100%;background:var(--surface2);border:.5px dashed var(--border2);border-radius:9px;padding:10px 12px;font-size:16px;color:var(--text3);min-height:42px;display:flex;align-items:center}
+.preview.ok{color:var(--green);font-weight:600}
+.btn-add{width:100%;margin-top:12px;padding:13px;background:var(--accent);color:#fff;border:none;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;font-family:inherit}
+.btn-add:active{opacity:.8;transform:scale(.98)}
+.btn-excel{width:100%;margin-top:8px;padding:12px;background:#e8f5e9;color:#1b5e20;border:.5px solid rgba(27,94,32,.25);border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit}
+.btn-excel:active{opacity:.8}
+.sec{margin:0 14px}
+.sec-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding:0 2px}
+.sec-hd span{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.6px}
+.btn-clr{font-size:12px;color:#c0392b;background:none;border:.5px solid #c0392b;border-radius:7px;padding:4px 11px;cursor:pointer;font-family:inherit;opacity:.65}
+.btn-clr:hover{opacity:1}
+.tbl-card{background:var(--surface);border:.5px solid var(--border);border-radius:14px;overflow:hidden}
+.tbl-scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:430px}
+thead{background:var(--surface2)}
+th{text-align:left;padding:8px 12px;font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;border-bottom:.5px solid var(--border);white-space:nowrap}
+td{padding:11px 12px;border-bottom:.5px solid var(--border);color:var(--text);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+.badge{display:inline-block;font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;white-space:nowrap}
+.bp{background:var(--green-bg);color:var(--green)}
+.ba{background:var(--blue-bg);color:var(--blue)}
+.bw{background:var(--amber-bg);color:var(--amber)}
+.xbtn{background:none;border:none;color:var(--text3);font-size:16px;cursor:pointer;padding:4px 8px;border-radius:6px}
+.xbtn:active{color:#c0392b}
+.empty{padding:32px 16px;text-align:center;color:var(--text3);font-size:14px}
 </style>
 </head>
 <body>
-<header>
-  <div>
-    <h1>&#x1F697; Fahrtenbuch</h1>
-    <div class="sub" id="hdate"></div>
-  </div>
-</header>
+
+<div class="header">
+  <h1>&#x1F697; Fahrtenbuch</h1>
+  <p id="hdate"></p>
+</div>
 
 <div class="stats">
-  <div class="stat"><div class="stat-val" id="s-n">0</div><div class="stat-lbl">Fahrten</div></div>
-  <div class="stat"><div class="stat-val" id="s-km">0</div><div class="stat-lbl">Gesamt km</div></div>
-  <div class="stat"><div class="stat-val" id="s-mo">0</div><div class="stat-lbl">km diesen Monat</div></div>
+  <div class="stat"><div class="stat-val" id="sn">0</div><div class="stat-lbl">Fahrten</div></div>
+  <div class="stat"><div class="stat-val" id="skm">0</div><div class="stat-lbl">Gesamt km</div></div>
+  <div class="stat"><div class="stat-val" id="smo">0</div><div class="stat-lbl">Monat km</div></div>
 </div>
 
 <div class="card">
-  <h2>Neue Fahrt eintragen</h2>
-  <div class="grid">
-    <div class="fg full"><label for="d">Datum</label><input type="date" id="d"></div>
-    <div class="fg full">
-      <label for="a">Fahrtart</label>
+  <div class="card-title">Neue Fahrt eintragen</div>
+  <div class="card-body">
+    <div class="fg"><label>Datum</label><input type="date" id="d"></div>
+    <div class="fg">
+      <label>Fahrtart</label>
       <select id="a">
-        <option value="">&#x2014; bitte wählen &#x2014;</option>
+        <option value="">&#x2014; bitte w&#228;hlen &#x2014;</option>
         <option value="privat">Privat</option>
         <option value="arbeit">Arbeit</option>
         <option value="wohnarbeit">Wohn-Arbeit</option>
       </select>
     </div>
-    <div class="fg"><label for="s">Anfang km</label><input type="number" id="s" placeholder="z.B. 12340" min="0"></div>
-    <div class="fg"><label for="e">Ende km</label><input type="number" id="e" placeholder="z.B. 12395" min="0"></div>
-    <div class="fg full"><label>Gefahrene km</label><div class="preview" id="prev">wird berechnet ...</div></div>
+    <div class="row2">
+      <div class="fg"><label>Anfang km</label><input type="number" id="s" placeholder="12340" min="0" inputmode="numeric"></div>
+      <div class="fg"><label>Ende km</label><input type="number" id="e" placeholder="12395" min="0" inputmode="numeric"></div>
+    </div>
+    <div class="fg"><label>Gefahrene km</label><div class="preview" id="prev">wird berechnet &#x2026;</div></div>
+    <button class="btn-add" onclick="add()">+ Fahrt hinzuf&#252;gen</button>
+    <button class="btn-excel" onclick="exportExcel()">&#x1F4E5; Als Excel exportieren (.xlsx)</button>
   </div>
-  <button class="btn-add" onclick="add()">+ Fahrt hinzufügen</button>
 </div>
 
 <div class="sec">
   <div class="sec-hd">
-    <h2>Alle Einträge</h2>
-    <button class="btn-del-all" onclick="clearAll()">Alle löschen</button>
+    <span>Alle Eintr&#228;ge</span>
+    <button class="btn-clr" onclick="clearAll()">Alle l&#246;schen</button>
   </div>
-  <div class="tbl-wrap">
-    <table>
-      <thead><tr><th>Datum</th><th>Fahrtart</th><th>Anfang km</th><th>Ende km</th><th>Gefahren</th><th></th></tr></thead>
-      <tbody id="tb"></tbody>
-    </table>
+  <div class="tbl-card">
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr><th>Datum</th><th>Fahrtart</th><th>Anfang km</th><th>Ende km</th><th>Gefahren</th><th></th></tr></thead>
+        <tbody id="tb"></tbody>
+      </table>
+    </div>
   </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
-const KEY = 'fbn_v1';
-const load = () => { try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch { return []; } };
-const save = d => localStorage.setItem(KEY, JSON.stringify(d));
-const fd = iso => { if (!iso) return ''; const [y,m,d] = iso.split('-'); return d+'.'+m+'.'+y; };
-const fmt = n => n.toLocaleString('de-DE');
+const KEY='fbn_v3';
+const ld=()=>{try{return JSON.parse(localStorage.getItem(KEY))||[];}catch{return[];}};
+const sv=d=>localStorage.setItem(KEY,JSON.stringify(d));
+const fd=iso=>{if(!iso)return'';const[y,m,d]=iso.split('-');return d+'.'+m+'.'+y;};
+const fmt=n=>Number(n).toLocaleString('de-DE');
+const artLabel=a=>a==='privat'?'Privat':a==='arbeit'?'Arbeit':'Wohn-Arbeit';
 
-function render() {
-  const data = load();
-  const tb = document.getElementById('tb');
-  if (!data.length) {
-    tb.innerHTML = '<tr><td colspan="6"><div class="empty">Noch keine Fahrten eingetragen.</div></td></tr>';
+function render(){
+  const data=ld();
+  const tb=document.getElementById('tb');
+  if(!data.length){
+    tb.innerHTML='<tr><td colspan="6"><div class="empty">Noch keine Fahrten eingetragen.</div></td></tr>';
   } else {
-    tb.innerHTML = data.slice().reverse().map((e,ri) => {
-      const i = data.length - 1 - ri;
-      const bc = e.art === 'privat' ? 'bp' : e.art === 'arbeit' ? 'ba' : 'bw';
-      const bl = e.art === 'privat' ? 'Privat' : e.art === 'arbeit' ? 'Arbeit' : 'Wohn-Arbeit';
-      return `<tr>
+    tb.innerHTML=data.slice().reverse().map((e,ri)=>{
+      const i=data.length-1-ri;
+      const bc=e.art==='privat'?'bp':e.art==='arbeit'?'ba':'bw';
+      return`<tr>
         <td>${fd(e.datum)}</td>
-        <td><span class="badge ${bc}">${bl}</span></td>
+        <td><span class="badge ${bc}">${artLabel(e.art)}</span></td>
         <td>${fmt(e.start)} km</td>
         <td>${fmt(e.end)} km</td>
-        <td class="km-val">${fmt(e.km)} km</td>
-        <td><button class="xbtn" onclick="del(${i})" title="Löschen">&#x2715;</button></td>
+        <td style="font-weight:600">${fmt(e.km)} km</td>
+        <td><button class="xbtn" onclick="del(${i})">&#x2715;</button></td>
       </tr>`;
     }).join('');
   }
-  const now = new Date();
-  const totalKm = data.reduce((s,e) => s+e.km, 0);
-  const moKm = data.filter(e => { const d=new Date(e.datum); return d.getFullYear()===now.getFullYear()&&d.getMonth()===now.getMonth(); }).reduce((s,e)=>s+e.km,0);
-  document.getElementById('s-n').textContent = data.length;
-  document.getElementById('s-km').textContent = fmt(totalKm);
-  document.getElementById('s-mo').textContent = fmt(moKm);
+  const now=new Date();
+  const totalKm=data.reduce((s,e)=>s+e.km,0);
+  const moKm=data.filter(e=>{const d=new Date(e.datum);return d.getFullYear()===now.getFullYear()&&d.getMonth()===now.getMonth();}).reduce((s,e)=>s+e.km,0);
+  document.getElementById('sn').textContent=data.length;
+  document.getElementById('skm').textContent=fmt(totalKm);
+  document.getElementById('smo').textContent=fmt(moKm);
 }
 
-function add() {
-  const datum = document.getElementById('d').value;
-  const art = document.getElementById('a').value;
-  const start = parseInt(document.getElementById('s').value);
-  const end = parseInt(document.getElementById('e').value);
-  if (!datum) { alert('Bitte Datum auswählen.'); return; }
-  if (!art) { alert('Bitte Fahrtart auswählen.'); return; }
-  if (isNaN(start)||start<0) { alert('Bitte gültigen Anfangs-km eingeben.'); return; }
-  if (isNaN(end)||end<0) { alert('Bitte gültigen Ende-km eingeben.'); return; }
-  if (end<=start) { alert('Ende-km muss größer als Anfangs-km sein.'); return; }
-  const data = load();
-  data.push({ datum, art, start, end, km: end-start });
-  data.sort((a,b) => a.datum.localeCompare(b.datum));
-  save(data);
-  document.getElementById('s').value = '';
-  document.getElementById('e').value = '';
-  document.getElementById('a').value = '';
-  const p = document.getElementById('prev');
-  p.textContent = 'wird berechnet ...';
-  p.classList.remove('ok');
+function add(){
+  const datum=document.getElementById('d').value;
+  const art=document.getElementById('a').value;
+  const start=parseInt(document.getElementById('s').value);
+  const end=parseInt(document.getElementById('e').value);
+  if(!datum){alert('Bitte Datum ausw\u00e4hlen.');return;}
+  if(!art){alert('Bitte Fahrtart ausw\u00e4hlen.');return;}
+  if(isNaN(start)||start<0){alert('Bitte g\u00fcltigen Anfangs-km eingeben.');return;}
+  if(isNaN(end)||end<0){alert('Bitte g\u00fcltigen Ende-km eingeben.');return;}
+  if(end<=start){alert('Ende-km muss gr\u00f6\u00dfer als Anfangs-km sein.');return;}
+  const data=ld();
+  data.push({datum,art,start,end,km:end-start});
+  data.sort((a,b)=>a.datum.localeCompare(b.datum));
+  sv(data);
+  document.getElementById('s').value='';
+  document.getElementById('e').value='';
+  document.getElementById('a').value='';
+  const p=document.getElementById('prev');
+  p.textContent='wird berechnet \u2026';p.classList.remove('ok');
   render();
 }
 
-function del(i) {
-  if (!confirm('Eintrag löschen?')) return;
-  const data = load(); data.splice(i,1); save(data); render();
+function del(i){
+  if(!confirm('Eintrag l\u00f6schen?'))return;
+  const data=ld();data.splice(i,1);sv(data);render();
 }
 
-function clearAll() {
-  if (!confirm('Wirklich ALLE Einträge löschen?')) return;
-  save([]); render();
+function clearAll(){
+  if(!confirm('Wirklich ALLE Eintr\u00e4ge l\u00f6schen?'))return;
+  sv([]);render();
 }
 
-function upd() {
-  const s = parseInt(document.getElementById('s').value);
-  const e = parseInt(document.getElementById('e').value);
-  const p = document.getElementById('prev');
-  if (!isNaN(s)&&!isNaN(e)&&e>s) { p.textContent = fmt(e-s)+' km'; p.classList.add('ok'); }
-  else { p.textContent = 'wird berechnet ...'; p.classList.remove('ok'); }
+function upd(){
+  const s=parseInt(document.getElementById('s').value);
+  const e=parseInt(document.getElementById('e').value);
+  const p=document.getElementById('prev');
+  if(!isNaN(s)&&!isNaN(e)&&e>s){p.textContent=fmt(e-s)+' km';p.classList.add('ok');}
+  else{p.textContent='wird berechnet \u2026';p.classList.remove('ok');}
 }
 
-document.getElementById('s').addEventListener('input', upd);
-document.getElementById('e').addEventListener('input', upd);
-document.getElementById('d').value = new Date().toISOString().split('T')[0];
+function exportExcel(){
+  const data=ld();
+  if(!data.length){alert('Keine Daten zum Exportieren.');return;}
+  const rows=[['Datum','Fahrtart','Anfang km','Ende km','Gefahrene km']];
+  data.forEach(e=>rows.push([fd(e.datum),artLabel(e.art),e.start,e.end,e.km]));
+  const totalKm=data.reduce((s,e)=>s+e.km,0);
+  rows.push([]);
+  rows.push(['Gesamt','','','',totalKm]);
+  const ws=XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols']=[{wch:14},{wch:14},{wch:12},{wch:12},{wch:14}];
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'Fahrtenbuch');
+  const now=new Date();
+  XLSX.writeFile(wb,'Fahrtenbuch_'+now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'.xlsx');
+}
 
-const mo = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
-const n = new Date();
-document.getElementById('hdate').textContent = n.getDate()+'. '+mo[n.getMonth()]+' '+n.getFullYear();
-
+document.getElementById('s').addEventListener('input',upd);
+document.getElementById('e').addEventListener('input',upd);
+document.getElementById('d').value=new Date().toISOString().split('T')[0];
+const mo=['Januar','Februar','M\u00e4rz','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+const n=new Date();
+document.getElementById('hdate').textContent=n.getDate()+'. '+mo[n.getMonth()]+' '+n.getFullYear();
 render();
 </script>
 </body>
