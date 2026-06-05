@@ -88,7 +88,10 @@ tr:last-child td{border-bottom:none}
     </div>
     <div class="fg"><label>Zweck / Ziel (optional)</label><input type="text" id="zw" placeholder="z.B. Kunde München"></div>
     <div class="row2">
-      <div class="fg"><label>Anfang km</label><input type="number" id="s" placeholder="12340" min="0" inputmode="numeric"></div>
+      <div class="fg">
+        <label>Anfang km <span id="s-hint" style="font-weight:400;color:var(--text3)"></span></label>
+        <input type="number" id="s" placeholder="12340" min="0" inputmode="numeric">
+      </div>
       <div class="fg"><label>Ende km</label><input type="number" id="e" placeholder="12395" min="0" inputmode="numeric"></div>
     </div>
     <div class="fg"><label>Gefahrene km</label><div class="preview" id="prev">wird berechnet &#x2026;</div></div>
@@ -159,6 +162,20 @@ function render(){
   document.getElementById('smo').textContent=fmt(moKm);
 }
 
+function prefillStart(){
+  const data=ld();
+  const sEl=document.getElementById('s');
+  const hint=document.getElementById('s-hint');
+  if(data.length>0){
+    const last=data[data.length-1];
+    sEl.value=last.end;
+    hint.textContent='= letzter Ende-km';
+    upd();
+  } else {
+    hint.textContent='';
+  }
+}
+
 function add(){
   const datum=document.getElementById('d').value;
   const art=document.getElementById('a').value;
@@ -174,14 +191,14 @@ function add(){
   data.push({datum,art,zweck,start,end,km:end-start});
   data.sort((a,b)=>a.datum.localeCompare(b.datum));
   sv(data);
-  document.getElementById('s').value='';
   document.getElementById('e').value='';
   document.getElementById('a').value='';
   document.getElementById('zw').value='';
   const p=document.getElementById('prev');
   p.textContent='wird berechnet \u2026';p.classList.remove('ok');
   render();
-  showToast('&#x2705; Fahrt gespeichert');
+  prefillStart();
+  showToast('\u2705 Fahrt gespeichert');
 }
 
 function del(i){
@@ -253,6 +270,7 @@ const mo=['Januar','Februar','M\u00e4rz','April','Mai','Juni','Juli','August','S
 const n=new Date();
 document.getElementById('hdate').textContent=n.getDate()+'. '+mo[n.getMonth()]+' '+n.getFullYear();
 render();
+prefillStart();
 </script>
 </body>
 </html>
